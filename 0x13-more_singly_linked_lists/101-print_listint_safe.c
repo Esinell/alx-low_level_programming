@@ -1,5 +1,8 @@
 #include "lists.h"
-#include <stdlib.h>
+#include <stdio.h>
+
+size_t get_looped_list_len(const listint_t *head);
+size_t print_listint_safe(const listint_t *head);
 
 /**
  * looped_listint_len - Counts the number of unique nodes
@@ -11,27 +14,42 @@
  */
 size_t get_looped_list_len(const listint_t *head)
 {
-    listint_t *slow_ptr = (listint_t *)head, *fast_ptr = (listint_t *)head;
-    size_t count = 0;
+    const listint_t *slow_ptr, *fast_ptr;
+    size_t count = 1;
 
-    while (fast_ptr != NULL && fast_ptr->next != NULL)
+    if (head == NULL || head->next == NULL)
+        return (0);
+
+    slow_ptr = head->next;
+    fast_ptr = (head->next)->next;
+
+    while (fast_ptr)
     {
-        slow_ptr = slow_ptr->next;
-        fast_ptr = fast_ptr->next->next;
-
         if (slow_ptr == fast_ptr)
         {
-            count = 1;
-            while (slow_ptr->next != fast_ptr)
+            slow_ptr = head;
+            while (slow_ptr != fast_ptr)
             {
-                slow_ptr = slow_ptr->next;
                 count++;
+                slow_ptr = slow_ptr->next;
+                fast_ptr = fast_ptr->next;
             }
-            return count;
+
+            slow_ptr = slow_ptr->next;
+            while (slow_ptr != fast_ptr)
+            {
+                count++;
+                slow_ptr = slow_ptr->next;
+            }
+
+            return (count);
         }
+
+        slow_ptr = slow_ptr->next;
+        fast_ptr = (fast_ptr->next)->next;
     }
 
-    return 0;
+    return (0);
 }
 
 /**
@@ -42,41 +60,29 @@ size_t get_looped_list_len(const listint_t *head)
  */
 size_t print_listint_safe(const listint_t *head)
 {
-    size_t count = 0, loop_len = 0;
-    listint_t **nodes = NULL, *tmp = (listint_t *)head;
+    size_t count, i = 0;
 
-    loop_len = get_looped_list_len(head);
+    count = get_looped_list_len(head);
 
-    if (loop_len > 0)
-        count = loop_len;
-    else
+    if (count == 0)
     {
-        while (tmp != NULL)
+        for (; head != NULL; count++)
         {
-            count++;
-            tmp = tmp->next;
+            printf("[%p] %d\n", (void *)head, head->n);
+            head = head->next;
         }
     }
-
-    nodes = malloc(sizeof(listint_t *) * count);
-    if (nodes == NULL)
-        exit(98);
-
-    tmp = (listint_t *)head;
-    for (size_t i = 0; i < count; i++)
+    else
     {
-        nodes[i] = tmp;
-        tmp = tmp->next;
+        for (i = 0; i < count; i++)
+        {
+            printf("[%p] %d\n", (void *)head, head->n);
+            head = head->next;
+        }
+
+        printf("-> [%p] %d\n", (void *)head, head->n);
     }
 
-    for (size_t i = 0; i < count; i++)
-    {
-        printf("[%p] %d\n", (void *)nodes[i], nodes[i]->n);
-        if (i == count - 1 && loop_len > 0)
-            printf("-> [%p] %d\n", (void *)nodes[i]->next, nodes[i]->next->n);
-    }
-
-    free(nodes);
-    return count;
+    return (count);
 }
 
